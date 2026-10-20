@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Chewy&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --card:  #fbdfec;   /* card */
+    --bar:   #f9c9de;   /* dialog title bar */
+    --paper: #fffafc;   /* dialog body */
+    --line:  #5b4040;   /* brown outlines and text */
+    --heart: #f58fb8;
+    --btn:   #f8ecd2;
+  }
+
+  /* Page is locked in place: no scrolling, no shifting */
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    position: fixed; inset: 0;
+    overflow: hidden;
+  }
+  body {
+    display: grid; place-items: center;
+    font-family: "Chewy", Arial, sans-serif;
+  }
+
+  /* Background layer: always covers the entire screen */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      url("bg.jpg") center / cover no-repeat,            /* <- your picture (optional) */
+      linear-gradient(160deg, #ffe9f2 0%, #ffcfe0 50%, #ffb6d1 100%);   /* pink backup */
+  }
+
+  .card {
+    position: relative;
+    width: min(92vw, 480px, calc(88dvh * 10 / 10.5));
+    aspect-ratio: 10 / 10.5;
+    background: var(--card);
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(91, 64, 64, .2);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 4% 4% 6%;
+    overflow: hidden;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: "Pacifico", cursive; font-weight: 400;
+    font-size: clamp(22px, 7vw, 38px);
+    color: var(--line); white-space: nowrap;
+  }
+  h1 span {
+    display: inline-block;
+    animation: letterDrop .6s cubic-bezier(.3, 1.6, .5, 1) both;
+  }
+  @keyframes letterDrop {
+    from { transform: translateY(-60px) rotate(-20deg); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+
+  .pet {
+    flex: 1; min-height: 0; width: 100%;
+    animation: popUp .7s cubic-bezier(.3, 1.5, .5, 1) .9s both,
+               bob 3s ease-in-out 1.6s infinite;
+  }
+  #friends { width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+  #friends.jump { animation: jump .5s ease-out; }
+
+  @keyframes popUp { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes bob   { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-8px) rotate(1.5deg); } }
+  @keyframes jump  {
+    0%, 100% { transform: translateY(0) scale(1); }
+    30%      { transform: translateY(0) scale(1.1, .9); }
+    60%      { transform: translateY(-25px) scale(.95, 1.08); }
+  }
+
+  .dialog {
+    position: relative; flex: none;
+    width: clamp(165px, 52%, 240px);
+    margin-top: 14px;
+    background: var(--paper);
+    border: 3px solid var(--line);
+    border-radius: 14px;
+    font-family: "Chewy", sans-serif;
+    animation: popUp .5s cubic-bezier(.3, 1.5, .5, 1) 1.6s both;
+  }
+  .dialog.shake { animation: shake .4s; }
+  @keyframes shake {
+    20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); } 80% { transform: translateX(4px); }
+  }
+  .bar {
+    height: 20px; background: var(--bar);
+    border-bottom: 3px solid var(--line);
+    border-radius: 10px 10px 0 0; position: relative;
+  }
+  .bar b {
+    position: absolute; right: 6px; top: 2px;
+    width: 18px; height: 12px; line-height: 11px; text-align: center;
+    border: 2px solid var(--line); border-radius: 3px;
+    background: var(--btn); color: var(--line); font-size: 11px;
+  }
+  .msg {
+    margin: 0; padding: 8px 10px 4px;
+    font-size: clamp(15px, 4.2vw, 20px); line-height: 1.15;
+    color: var(--line); text-align: left;
+  }
+  .btns { display: flex; gap: 14px; padding: 4px 10px 10px; }
+  .btns button {
+    font: inherit; font-size: clamp(14px, 3.8vw, 18px);
+    flex: 1; padding: 2px 0;
+    background: var(--btn); color: var(--line);
+    border: 2px solid var(--line); border-radius: 6px;
+    cursor: pointer; letter-spacing: 1px;
+  }
+  .btns button:active { transform: scale(.93); }
+  #yes { animation: pulse 1.4s ease-in-out 2.1s infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+  .bunny { position: absolute; left: -14px; top: -36px; width: 50px; }
+  .heart { position: absolute; fill: var(--heart); stroke: var(--line); stroke-width: 1.5; }
+  .h1 { right: -14px; top: 36%; width: 22px; }
+  .h2 { left: -12px; bottom: -6px; width: 18px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pet, #yes, h1 span { animation: none; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="card">
+    <h1 id="title"></h1>
+    <!-- src must match your picture's file name exactly -->
+    <div class="pet"><img id="friends" src="hehe.jpg" alt="" onerror="this.style.display='none'"></div>
+
+    <div class="dialog" id="dialog">
+      <div class="bar"><b>x</b></div>
+      <p class="msg" id="msg">Ready for your surprise?</p>
+      <div class="btns">
+        <button id="no">NO</button>
+        <button id="yes">YES</button>
+      </div>
+
+      <svg class="bunny" viewBox="0 0 60 60" aria-hidden="true">
+        <g fill="#fff" stroke="#5b4040" stroke-width="2.5">
+          <ellipse cx="21" cy="15" rx="6" ry="14" transform="rotate(-8 21 15)"/>
+          <ellipse cx="38" cy="15" rx="6" ry="14" transform="rotate(8 38 15)"/>
+        </g>
+        <ellipse cx="21" cy="17" rx="2.5" ry="8" fill="#f9c9de" transform="rotate(-8 21 17)"/>
+        <ellipse cx="38" cy="17" rx="2.5" ry="8" fill="#f9c9de" transform="rotate(8 38 17)"/>
+        <ellipse cx="30" cy="42" rx="23" ry="16" fill="#fff" stroke="#5b4040" stroke-width="2.5"/>
+        <circle cx="22" cy="42" r="2.4" fill="#5b4040"/><circle cx="38" cy="42" r="2.4" fill="#5b4040"/>
+        <ellipse cx="15" cy="48" rx="4" ry="2.6" fill="#f9c9de"/><ellipse cx="45" cy="48" rx="4" ry="2.6" fill="#f9c9de"/>
+      </svg>
+
+      <svg class="heart h1" viewBox="0 0 24 22"><path d="M12 20 C-5 9 4 -2 12 5 C20 -2 29 9 12 20Z"/></svg>
+      <svg class="heart h2" viewBox="0 0 24 22"><path d="M12 20 C-5 9 4 -2 12 5 C20 -2 29 9 12 20Z"/></svg>
+    </div>
+  </div>
+
+<script>
+  var text = "Happy Birthaday cutie";
+  var title = document.getElementById('title');
+  text.split('').forEach(function (ch, i) {
+    var s = document.createElement('span');
+    s.textContent = ch === ' ' ? '\u00A0' : ch;
+    s.style.animationDelay = (i * 0.06) + 's';
+    title.appendChild(s);
+  });
+
+  var friends = document.getElementById('friends');
+  friends.onclick = jump;
+  function jump() {
+    friends.classList.add('jump');
+    setTimeout(function () { friends.classList.remove('jump'); }, 500);
+  }
+
+  document.getElementById('no').onclick = function () {
+    var d = document.getElementById('dialog');
+    d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+    document.getElementById('msg').textContent = "Try YES please!";
+    setTimeout(function () {
+      document.getElementById('msg').textContent = "Ready for your surprise?";
+    }, 1800);
+  };
+
+  document.getElementById('yes').onclick = function () {
+    jump();
+    setTimeout(function () {
+      window.location = "flowers.html";   
+    }, 600);
+  };
+</script>
+</body>
+</html>

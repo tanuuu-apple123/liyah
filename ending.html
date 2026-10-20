@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --line: #5b4040; }
+
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; position: fixed; inset: 0; overflow: hidden; }
+  body {
+    display: grid; place-items: center;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.9), transparent 40%),
+      radial-gradient(circle at 85% 88%, rgba(255,255,255,.6), transparent 45%),
+      linear-gradient(160deg, #ffe3ee 0%, #ffc4da 55%, #ffa9c8 100%);
+  }
+
+  .wrap { position: relative; z-index: 1; animation: drop 1s cubic-bezier(.3, 1.4, .5, 1) .5s backwards; }
+  @keyframes drop {
+    from { transform: translateY(-110dvh) rotate(-14deg); opacity: 0; }
+  }
+
+  .polaroid {
+    width: min(84vw, 380px);
+    background: #fff; padding: 18px 18px 0; border-radius: 6px;
+    box-shadow: 0 18px 36px rgba(91, 64, 64, .3);
+    cursor: pointer; transform: rotate(-2deg);
+    animation: sway 5s ease-in-out 2s infinite;
+  }
+  @keyframes sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(1deg) translateY(-4px); } }
+
+  /* The photo shrinks to leave room for the caption on any screen */
+  .photo {
+    display: block; margin: 0 auto;
+    max-width: 100%; height: auto;
+    max-height: min(calc(100dvh - 250px), 460px);
+    object-fit: contain;
+  }
+  .missing { padding: 60px 0; text-align: center; color: var(--line); font-family: "Caveat", cursive; font-size: 24px; }
+
+  .tape {
+    position: absolute; top: -12px; left: 50%; width: 28%; height: 24px;
+    transform: translateX(-50%) rotate(-4deg);
+    background: repeating-linear-gradient(45deg, #ffc9dc 0 9px, #fff 9px 18px);
+    opacity: .9; box-shadow: 0 1px 3px rgba(0, 0, 0, .15); z-index: 2;
+  }
+
+  /* Caption: plain text, always visible if animations fail */
+  .cap { padding: 14px 8px 20px; text-align: center; }
+  .big { font-family: "Pacifico", cursive; font-size: clamp(24px, 7vw, 34px); line-height: 1.3; color: var(--line); animation: up .8s cubic-bezier(.3, 1.4, .5, 1) 1.8s backwards; }
+  .sub { font-family: "Caveat", cursive; font-weight: 500; font-size: clamp(22px, 6vw, 28px); color: #8a5a6a; margin-top: 4px; animation: up .8s cubic-bezier(.3, 1.4, .5, 1) 2.4s backwards; }
+  @keyframes up { from { transform: translateY(24px) scale(.8); opacity: 0; } }
+
+  .fl { position: fixed; bottom: -40px; z-index: 0; opacity: .75; animation: floatUp linear infinite; pointer-events: none; }
+  @keyframes floatUp { to { transform: translateY(-115dvh) rotate(25deg); } }
+  .pop { position: fixed; z-index: 5; pointer-events: none; animation: popUp 1.1s ease-out forwards; }
+  @keyframes popUp { to { transform: translate(var(--dx), -140px) scale(1.4); opacity: 0; } }
+
+  #veil { position: fixed; inset: 0; z-index: 10; pointer-events: none; background: #ffd9e8; opacity: 0; animation: veilIn .9s ease .1s backwards; }
+  @keyframes veilIn { from { opacity: 1; } }
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="tape"></div>
+    <div class="polaroid" id="card">
+      <img class="photo" id="photo" src="Happy Birthday Clipart_ Bunny in Party Hat or with Gifts.jpg" alt="">
+      <div class="cap">
+        <div class="big">Go forth and enjoy your day my child</div>
+        <div class="sub">muehehe</div>
+      </div>
+    </div>
+  </div>
+  <div id="veil"></div>
+
+<script>
+  var photo = document.getElementById('photo');
+  photo.onerror = function () {
+    var m = document.createElement('div');
+    m.className = 'missing'; m.textContent = 'final.jpg not found';
+    photo.replaceWith(m);
+  };
+
+  var icons = ['💗', '🌸', '✨', '💗', '🍓'];
+  for (var k = 0; k < 14; k++) {
+    var f = document.createElement('div');
+    f.className = 'fl'; f.textContent = icons[k % icons.length];
+    f.style.left = (Math.random() * 94) + 'vw';
+    f.style.fontSize = (18 + Math.random() * 20) + 'px';
+    f.style.animationDuration = (9 + Math.random() * 8) + 's';
+    f.style.animationDelay = (-Math.random() * 12) + 's';
+    document.body.appendChild(f);
+  }
+
+  document.getElementById('card').addEventListener('click', function (e) {
+    for (var i = 0; i < 6; i++) {
+      var h = document.createElement('div');
+      h.className = 'pop'; h.textContent = '💗';
+      h.style.left = e.clientX + 'px'; h.style.top = e.clientY + 'px';
+      h.style.fontSize = (18 + Math.random() * 14) + 'px';
+      h.style.setProperty('--dx', ((Math.random() - 0.5) * 140) + 'px');
+      h.style.animationDelay = (i * 0.06) + 's';
+      document.body.appendChild(h);
+      setTimeout(function (el) { el.remove(); }, 1500, h);
+    }
+  });
+</script>
+</body>
+</html>

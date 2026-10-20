@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --line: #5b4040;
+    --btn:  #f8ecd2;
+    --gray: #c9d0da;
+  }
+
+  /* Page is locked: no scrolling, no shifting */
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    position: fixed; inset: 0; overflow: hidden;
+  }
+  body { font-family: "Chewy", Arial, sans-serif; }
+
+  /* Background picture covers the ENTIRE screen */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      url("childe💙.jpg") center / cover no-repeat,
+      linear-gradient(160deg, #ffe9f2 0%, #ffcfe0 50%, #ffb6d1 100%);   /* backup if picture is missing */
+  }
+
+  /* The gray video panel, sitting on the right side */
+  .player {
+    position: fixed;
+    right: 6vw; top: 50%;
+    height: min(72dvh, 640px);
+    width: auto;
+    aspect-ratio: 9 / 16;
+    transform: translateY(-50%);
+    background: var(--gray);
+    border: 3px solid var(--line); border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .3);
+    animation: popUp .7s cubic-bezier(.3, 1.5, .5, 1) both;
+  }
+  @keyframes popUp {
+    from { transform: translateY(-50%) scale(.6); opacity: 0; }
+    to   { transform: translateY(-50%) scale(1);  opacity: 1; }
+  }
+  video { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  /* Next button */
+  #next {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: max(20px, env(safe-area-inset-bottom));
+    font: inherit; font-size: 22px; letter-spacing: 1px;
+    padding: 6px 34px;
+    background: var(--btn); color: var(--line);
+    border: 3px solid var(--line); border-radius: 12px;
+    box-shadow: 0 4px 0 var(--line);
+    cursor: pointer;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  #next:active { margin-bottom: -3px; box-shadow: 0 1px 0 var(--line); }
+  @keyframes pulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50%      { transform: translateX(-50%) scale(1.07); }
+  }
+
+  /* Shown only if the browser blocks the song until the first tap */
+  #hint {
+    position: fixed; top: max(14px, env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%);
+    background: var(--btn); color: var(--line);
+    border: 2px solid var(--line); border-radius: 20px;
+    padding: 4px 16px; font-size: 16px; display: none;
+  }
+    #veil {
+    position: fixed; inset: 0; z-index: 20; pointer-events: none;
+    background: #58b6dc;
+    animation: veilOut .9s ease .3s both;
+  }
+
+  /* Phones held upright: video centered */
+  @media (max-aspect-ratio: 1 / 1) {
+    .player {
+      right: auto; left: 50%; top: 46%;
+      width: min(90vw, calc(68dvh * 4 / 5));
+      animation-name: popUpC;
+    }
+    @keyframes popUpC {
+      from { transform: translate(-50%, -50%) scale(.6); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1);  opacity: 1; }
+    }
+    .player { transform: translate(-50%, -50%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) { #next, .player { animation: none; } }
+</style>
+</head>
+
+<body>
+  <div class="player">
+    <!-- muted + autoplay + loop: starts by itself and repeats -->
+    <video id="vid" src="video.mp4" autoplay muted loop playsinline></video>
+  </div>
+
+  <!-- the different audio -->
+  <audio id="aud" src="song.mp3" loop></audio>
+
+  <div id="hint">Tap anywhere for sound</div>
+  <button id="next">Next</button>
+
+<script>
+  var vid = document.getElementById('vid');
+  var aud = document.getElementById('aud');
+  var hint = document.getElementById('hint');
+
+  vid.muted = true;
+  vid.volume = 0;
+
+  var VIDEO_DELAY = 300;    // ms after the page opens, when the video starts
+  var AUDIO_DELAY = 2000;   // ms after the video starts, when the song starts
+  var audTimer;
+
+  aud.addEventListener('error', function () {
+    hint.textContent = "song.mp3 not found";
+    hint.style.display = 'block';
+  });
+
+  // Song starts AUDIO_DELAY after the video (or after each loop)
+  function scheduleAudio() {
+    clearTimeout(audTimer);
+    aud.pause();
+    aud.currentTime = 0;
+    audTimer = setTimeout(function () {
+      var p = aud.play();
+      if (p) {
+        p.then(function () { hint.style.display = 'none'; })
+         .catch(function () { hint.style.display = 'block'; });
+      }
+    }, AUDIO_DELAY);
+  }
+
+  // Video starts first
+  setTimeout(function () {
+    vid.currentTime = 0;
+    vid.play();
+    scheduleAudio();
+  }, VIDEO_DELAY);
+
+  // If the browser blocked the song, the first tap turns it on
+  function unlock() {
+    if (!aud.paused) { removeUnlock(); return; }
+    if (vid.paused || vid.currentTime < AUDIO_DELAY / 1000) return;   // too early: the timer will do it
+    aud.currentTime = vid.currentTime - AUDIO_DELAY / 1000;
+    aud.play().then(function () {
+      hint.style.display = 'none';
+      removeUnlock();
+    }).catch(function () {});
+  }
+  function removeUnlock() {
+    ['click', 'touchend', 'keydown'].forEach(function (e) {
+      document.removeEventListener(e, unlock);
+    });
+  }
+  ['click', 'touchend', 'keydown'].forEach(function (e) {
+    document.addEventListener(e, unlock);
+  });
+
+  // When the video loops, the song restarts with the same 2 second delay
+  var last = 0;
+  vid.addEventListener('timeupdate', function () {
+    if (vid.currentTime < last - 0.5) {
+      scheduleAudio();
+    }
+    last = vid.currentTime;
+  });
+
+  document.getElementById('next').onclick = function () {
+     window.location = "ending.html";   
+  };
+</script>
+</body>
+</html>

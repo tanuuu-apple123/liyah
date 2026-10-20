@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Chewy&display=swap" rel="stylesheet">
+<style>
+  :root { --line: #5b4040; --btn: #f8ecd2; }
+
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    position: fixed; inset: 0; overflow: hidden;
+  }
+  body {
+    display: grid; place-items: center;
+    background: linear-gradient(160deg, #ffe9f2 0%, #ffcfe0 50%, #ffb6d1 100%);
+    animation: pageIn .8s both;
+  }
+  @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+
+  #stage { width: min(90vw, 520px); max-height: 92dvh; text-align: center; }
+  .scene {
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+  }
+  .scene.out {
+    transition: opacity .35s ease, transform .35s ease;
+    opacity: 0; transform: translateY(-20px) scale(.95);
+  }
+
+  /* Text: words pop in one by one */
+  .text {
+    font-family: "Pacifico", cursive; color: var(--line);
+    font-size: clamp(28px, 8vw, 56px); line-height: 1.35;
+    text-shadow: 0 2px 0 rgba(255, 255, 255, .7);
+  }
+  .text.small { font-size: clamp(24px, 6.5vw, 40px); }
+  .text span {
+    display: inline-block;
+    animation: wordIn .45s cubic-bezier(.3, 1.6, .5, 1) both;
+  }
+  @keyframes wordIn {
+    from { transform: translateY(40px) scale(.7) rotate(-6deg); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+
+  /* Image and gif */
+  .pic {
+    max-width: 100%; max-height: 62dvh; display: block;
+    border: 5px solid #fff; border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(91, 64, 64, .25);
+    animation: popUp .7s cubic-bezier(.3, 1.5, .5, 1) both;
+  }
+     .scene.gif .pic { max-height: 42dvh; border: none; box-shadow: none; background: transparent; mix-blend-mode: screen; }
+  .missing { font-family: "Chewy", sans-serif; color: var(--line); font-size: 18px; }
+
+  /* Envelope */
+  .env {
+    width: clamp(190px, 58vw, 260px); cursor: pointer;
+    animation: popUp .6s cubic-bezier(.3, 1.5, .5, 1) both,
+               wiggle 2.4s ease-in-out .8s infinite;
+  }
+  .env.open { animation: none; }
+  .env svg { width: 100%; display: block; overflow: visible; }
+  .flap  { transform-origin: 100px 8px; transition: transform .45s ease, opacity .45s ease; }
+  .paper { transition: transform .6s ease .25s; }
+  .env.open .flap  { transform: scaleY(-1); opacity: 0; }
+  .env.open .paper { transform: translateY(-46px); }
+  @keyframes wiggle {
+    0%, 14%, 100% { transform: rotate(0); }
+    4% { transform: rotate(-5deg); } 8% { transform: rotate(5deg); } 11% { transform: rotate(-3deg); }
+  }
+  .tap {
+    font-family: "Chewy", sans-serif; font-size: 20px; color: var(--line);
+    animation: popUp .5s ease both;
+  }
+
+  /* Pink fade when leaving to the letter page */
+  #veil {
+    position: fixed; inset: 0; z-index: 10; pointer-events: none;
+    background: #ffd9e8; opacity: 0; transition: opacity .7s ease;
+  }
+  body.leaving #veil { opacity: 1; }
+</style>
+</head>
+
+<body>
+  <div id="stage"></div>
+  <div id="veil"></div>
+
+<script>
+  var LETTER = "letter.html";     // the page the envelope opens
+
+  // Your sequence. Edit the words, files and hold times (ms) here.
+  var steps = [
+    { type: "text",  text: "hehe thanks for accepting ~", hold: 1100 },
+    { type: "text",  text: "Here are flowers for a special girl", hold: 1500 },
+    { type: "image", src: "flowers.png", hold: 2800 },
+    { type: "gif",   src: "I Love You Hearts GIF.gif", text: "May you acheive everything you want", hold: 3500 },
+    { type: "final", text: "And I wrote something for you" }
+  ];
+
+  var stage = document.getElementById('stage');
+
+  // Load pictures early so they appear instantly
+  steps.forEach(function (s) { if (s.src) { var p = new Image(); p.src = s.src; } });
+
+  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+  function words(text, cls) {
+    var d = el('div', 'text ' + (cls || ''));
+    text.split(' ').forEach(function (w, k) {
+      var s = el('span'); s.textContent = w;
+      s.style.animationDelay = (k * 0.12) + 's';
+      d.appendChild(s); d.appendChild(document.createTextNode(' '));
+    });
+    return d;
+  }
+  function wordTime(text) { return text.split(' ').length * 120 + 450; }
+
+  function picture(src) {
+    var im = el('img', 'pic'); im.src = src; im.alt = '';
+    im.onerror = function () {
+      var m = el('div', 'missing'); m.textContent = src + " not found";
+      im.replaceWith(m);
+    };
+    return im;
+  }
+
+  function envelope() {
+    var wrap = el('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px';
+    wrap.innerHTML =
+      '<div class="env" id="env"><svg viewBox="0 0 200 140" aria-label="Open the letter">' +
+      '<g stroke="#5b4040" stroke-width="4" stroke-linejoin="round">' +
+      '<rect x="3" y="6" width="194" height="131" rx="8" fill="#f9c9de"/>' +
+      '<g class="paper"><rect x="22" y="16" width="156" height="100" rx="5" fill="#fffafc" stroke-width="3"/>' +
+      '<path d="M40 44h120M40 62h120M40 80h80" stroke="#f58fb8" stroke-width="4" stroke-linecap="round"/></g>' +
+      '<path d="M4 10 L100 76 L4 136Z" fill="#fbc7da"/><path d="M196 10 L100 76 L196 136Z" fill="#fbc7da"/>' +
+      '<path d="M4 136 L100 72 L196 136Z" fill="#f7b6cf"/>' +
+      '<g class="flap"><path d="M4 8 L100 80 L196 8Z" fill="#f58fb8"/>' +
+      '<circle cx="100" cy="52" r="9" fill="#fffafc" stroke-width="3"/></g></g></svg></div>' +
+      '<div class="tap">Tap to open</div>';
+    return wrap;
+  }
+
+  function show(i) {
+    var s = steps[i];
+    stage.innerHTML = '';
+    var scene = el('div', 'scene ' + s.type);
+    stage.appendChild(scene);
+    var appear = 700;
+
+    if (s.type === 'text') {
+      scene.appendChild(words(s.text));
+      appear = wordTime(s.text);
+    }
+    if (s.type === 'image') {
+      scene.appendChild(picture(s.src));
+    }
+    if (s.type === 'gif') {
+      scene.appendChild(picture(s.src));
+      var t = words(s.text, 'small');
+      t.querySelectorAll('span').forEach(function (sp, k) {
+        sp.style.animationDelay = (0.7 + k * 0.12) + 's';     // text comes after the gif
+      });
+      scene.appendChild(t);
+      appear = 700 + wordTime(s.text);
+    }
+    if (s.type === 'final') {
+      scene.appendChild(words(s.text));
+      setTimeout(function () {                                 // envelope pops up after the text
+        scene.appendChild(envelope());
+        document.getElementById('env').onclick = openLetter;
+      }, wordTime(s.text) + 500);
+      return;                                                  // last step: stays on screen
+    }
+
+    setTimeout(function () { scene.classList.add('out'); }, appear + s.hold);
+    setTimeout(function () { show(i + 1); }, appear + s.hold + 400);
+  }
+
+  function openLetter() {
+    var env = document.getElementById('env');
+    if (env.classList.contains('open')) return;
+    env.classList.add('open');
+    setTimeout(function () { document.body.classList.add('leaving'); }, 1000);
+    setTimeout(function () { window.location = LETTER; }, 1700);
+  }
+
+  setTimeout(function () { show(0); }, 500);
+</script>
+</body>
+</html>

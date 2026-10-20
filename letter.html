@@ -1,0 +1,224 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Chewy&display=swap" rel="stylesheet">
+<style>
+  :root { --line: #5b4040; }
+
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; position: fixed; inset: 0; overflow: hidden; }
+  body {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    font-family: "Chewy", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,.9), transparent 40%),
+      radial-gradient(circle at 85% 88%, rgba(255,255,255,.6), transparent 45%),
+      linear-gradient(160deg, #ffe3ee 0%, #ffc4da 55%, #ffa9c8 100%);
+  }
+
+  /* The sheet: paper + decorations. The shadow goes on this wrapper so the torn edge keeps it. */
+  .sheet {
+    position: relative; z-index: 1;
+    width: min(90vw, 500px, calc((100dvh - 100px) * 5 / 7));
+    aspect-ratio: 5 / 7;
+    filter: drop-shadow(0 14px 22px rgba(91, 64, 64, .32));
+    animation: rise .9s cubic-bezier(.3, 1.3, .5, 1) both, sway 6s ease-in-out 1s infinite;
+  }
+  @keyframes rise { from { transform: translateY(80px) scale(.9) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes sway { 50% { transform: rotate(.7deg) translateY(-3px); } }
+
+  .paper {
+    position: absolute; inset: 0; container-type: inline-size;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,.7), transparent 55%),
+      #fff6e6;
+    box-shadow: inset 0 0 26px rgba(190, 130, 80, .38);   /* aged edges */
+    --lh: 7.3cqw;
+  }
+  .paper::before {                                          /* dashed border */
+    content: ""; position: absolute; inset: 4.5%;
+    border: 2px dashed #e79bb8; border-radius: 4px; pointer-events: none;
+  }
+
+  /* Writing area: ruled lines drawn to match the text rows */
+  #ink {
+    position: absolute; left: 13%; width: 74%; top: 14%;
+    height: calc(var(--lh) * 11); overflow: hidden;
+    font-family: "Caveat", cursive; font-weight: 500;
+    font-size: 5.9cqw; line-height: var(--lh);
+    color: #6b3a4a; white-space: pre-wrap;
+    background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--lh) - 1.5px), #f4c2d4 calc(var(--lh) - 1.5px), #f4c2d4 var(--lh));
+    transition: opacity .3s ease;
+  }
+  #ink.fade { opacity: 0; }
+
+  /* Decorations */
+  .deco { position: absolute; pointer-events: none; }
+  .bow    { width: 25%; top: -5%; left: -7%; transform: rotate(-12deg); }
+  .tulips { width: 33%; bottom: -4%; right: -6%; }
+  .tape   {
+    width: 28%; height: 5.5%; top: -2.8%; left: 50%; transform: translateX(-50%) rotate(-3deg);
+    background: repeating-linear-gradient(45deg, #ffc9dc 0 9px, #fff 9px 18px); opacity: .88;
+    box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  }
+  .heart { width: 7%; animation: beat 1.6s ease-in-out infinite; }
+  .h1 { top: 2%; right: 2%; }
+  .h2 { bottom: 22%; left: 2%; animation-delay: .5s; }
+  @keyframes beat { 50% { transform: scale(1.18); } }
+
+  #hint {
+    position: relative; z-index: 2; height: 24px;
+    font-size: 20px; color: var(--line);
+    opacity: 0; transition: opacity .4s ease; pointer-events: none;
+  }
+  #hint.on { opacity: 1; animation: bob 1.4s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(4px); } }
+
+  .fl { position: fixed; bottom: -40px; z-index: 0; opacity: .75; animation: floatUp linear infinite; pointer-events: none; }
+  @keyframes floatUp { to { transform: translateY(-115dvh) rotate(25deg); } }
+
+  #veil { position: fixed; inset: 0; z-index: 10; pointer-events: none; background: #ffd9e8; animation: veilOut .8s ease .1s both; }
+  @keyframes veilOut { to { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) { .sheet, .heart, .fl { animation: none; } }
+  #next {
+  position: fixed; bottom: 22px; left: 50%; z-index: 5;
+  transform: translateX(-50%) scale(.6);
+  padding: 8px 26px; font: inherit; font-size: 20px; letter-spacing: 1px;
+  background: #f8ecd2; color: var(--line);
+  border: 3px solid var(--line); border-radius: 10px; cursor: pointer;
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease, transform .4s cubic-bezier(.3, 1.5, .5, 1);
+}
+#next.on { opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); }
+</style>
+</head>
+
+<body>
+  <div class="sheet" id="sheet">
+    <div class="paper" id="paper"><div id="ink"></div></div>
+
+    <div class="deco tape"></div>
+
+    <svg class="deco bow" viewBox="0 0 100 90" aria-hidden="true">
+      <g fill="#f27fa8" stroke="#8a3f55" stroke-width="2.5" stroke-linejoin="round">
+        <path d="M46 48 C38 70 30 80 24 86 L36 84 L40 74 C44 66 48 58 50 50Z"/>
+        <path d="M54 48 C62 70 70 80 76 86 L64 84 L60 74 C56 66 52 58 50 50Z"/>
+        <path d="M50 40 C20 5 0 25 10 45 C18 60 40 52 50 40Z"/>
+        <path d="M50 40 C80 5 100 25 90 45 C82 60 60 52 50 40Z"/>
+        <ellipse cx="50" cy="42" rx="9" ry="8" fill="#e8628f"/>
+      </g>
+    </svg>
+
+    <svg class="deco tulips" viewBox="0 0 120 140" aria-hidden="true">
+      <g stroke="#4d7a2c" stroke-width="3" fill="none" stroke-linecap="round">
+        <path d="M30 44 C34 80 52 110 62 138"/><path d="M62 32 L62 138"/><path d="M94 50 C90 90 74 115 62 138"/>
+      </g>
+      <g fill="#a6d663" stroke="#4d7a2c" stroke-width="2.5" stroke-linejoin="round">
+        <path d="M62 138 C30 124 16 92 24 66 C46 80 60 108 62 138Z"/>
+        <path d="M62 138 C94 124 108 92 100 66 C78 80 64 108 62 138Z"/>
+      </g>
+      <g fill="#f27fa8" stroke="#8a3f55" stroke-width="2.5" stroke-linejoin="round">
+        <path transform="translate(30 46) rotate(-10)" d="M0 0 C-14 0 -17 -22 -12 -32 L-5 -23 L0 -34 L5 -23 L12 -32 C17 -22 14 0 0 0Z"/>
+        <path transform="translate(62 34)" d="M0 0 C-14 0 -17 -22 -12 -32 L-5 -23 L0 -34 L5 -23 L12 -32 C17 -22 14 0 0 0Z"/>
+        <path transform="translate(94 52) rotate(10)" d="M0 0 C-14 0 -17 -22 -12 -32 L-5 -23 L0 -34 L5 -23 L12 -32 C17 -22 14 0 0 0Z"/>
+      </g>
+    </svg>
+
+    <svg class="deco heart h1" viewBox="0 0 24 22"><path d="M12 20 C-5 9 4 -2 12 5 C20 -2 29 9 12 20Z" fill="#f27fa8" stroke="#8a3f55" stroke-width="1.6"/></svg>
+    <svg class="deco heart h2" viewBox="0 0 24 22"><path d="M12 20 C-5 9 4 -2 12 5 C20 -2 29 9 12 20Z" fill="#f9a9c6" stroke="#8a3f55" stroke-width="1.6"/></svg>
+  </div>
+
+  <div id="hint">tap to continue</div>
+  <button id="next">final present 💗</button>
+  <div id="veil"></div>
+
+<script>
+  // ---- Your letter. Each line in quotes is one sheet (about 11 lines of ~30 letters). ----
+     var pages = [
+    "Dear Liyah,\n\nHappy birthday! Looking back, I never would have imagined we would come this far and be this close.",
+    "It was a random meeting. I remember randomly joining coop, and I never imagined that from that random encounter we would come this far.",
+    "Even if one day I am not here, I will always pray for your wellbeing. I hope you meet lots of nice people along the way and achieve whatever it is that you desire.",
+    "(I am not good with words, I will stop here hehe)\n\nWith love,\nNavia"
+  ];
+  var SPEED = 55;
+  var NEXT_PAGE = "wish.html";
+
+  // Torn paper edge
+  (function () {
+    var p = [], n = 36, m = 50, r = function () { return Math.random() * 1.3; };
+    for (var i = 0; i <= n; i++) p.push([i / n * 100, r()]);
+    for (i = 1; i <= m; i++) p.push([100 - r(), i / m * 100]);
+    for (i = 1; i <= n; i++) p.push([100 - i / n * 100, 100 - r()]);
+    for (i = 1; i < m; i++) p.push([r(), 100 - i / m * 100]);
+    document.getElementById('paper').style.clipPath =
+      'polygon(' + p.map(function (q) { return q[0].toFixed(1) + '% ' + q[1].toFixed(1) + '%'; }).join(',') + ')';
+  })();
+
+  var ink = document.getElementById('ink');
+  var hint = document.getElementById('hint');
+
+  // Next button made here, so it can't go missing
+  var nextBtn = document.createElement('button');
+  nextBtn.id = 'next';
+  nextBtn.textContent = 'Next 💗';
+  document.body.appendChild(nextBtn);
+
+  var cur = 0, typing = false, ready = false, timer;
+
+  function start(i) {
+    cur = i; ready = false; typing = true;
+    hint.classList.remove('on');
+    ink.className = ''; ink.textContent = '';
+    var txt = pages[i], n = 0;
+    clearInterval(timer);
+    timer = setInterval(function () {
+      n++; ink.textContent = txt.slice(0, n);
+      if (n >= txt.length) done();
+    }, SPEED);
+  }
+
+  function done() {
+    clearInterval(timer);
+    ink.textContent = pages[cur];
+    typing = false;
+    setTimeout(function () {
+      ready = true;
+      if (cur < pages.length - 1) hint.classList.add('on');
+      else nextBtn.classList.add('on');
+    }, 400);
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.target === nextBtn) return;
+    if (typing) { done(); return; }
+    if (!ready || cur === pages.length - 1) return;
+    ready = false; hint.classList.remove('on');
+    ink.className = 'fade';
+    setTimeout(function () { start(cur + 1); }, 350);
+  });
+
+  nextBtn.addEventListener('click', function () {
+    document.body.style.transition = 'opacity .6s ease';
+    document.body.style.opacity = 0;
+    setTimeout(function () { window.location = NEXT_PAGE; }, 650);
+  });
+
+  // Floating icons
+  var icons = ['🍓', '💗', '🌸', '✨', '🍓'];
+  for (var k = 0; k < 14; k++) {
+    var f = document.createElement('div');
+    f.className = 'fl';
+    f.textContent = icons[k % icons.length];
+    f.style.left = (Math.random() * 94) + 'vw';
+    f.style.fontSize = (18 + Math.random() * 20) + 'px';
+    f.style.animationDuration = (9 + Math.random() * 8) + 's';
+    f.style.animationDelay = (-Math.random() * 12) + 's';
+    document.body.appendChild(f);
+  }
+
+  setTimeout(function () { start(0); }, 1100);
+</script>
+</body>
+</html>
